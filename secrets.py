@@ -23,7 +23,7 @@ auth_url += "&scope=" + urllib.parse.quote(scope)
 
 print("Please authenticate using this URL: " + auth_url, "\n")
 
-redirected_url = input("Please enter the full redirected_url: ")
+redirected_url = input("Please enter the full redirected URL: ")
 a = REDIRECT_URI + "/?code="
 b = "&state=" + state
 code = redirected_url[len(a):]

@@ -17,9 +17,9 @@ Create an app on https://developer.spotify.com/dashboard/
 Go to the app settings and add http://localhost/topsongify/callback/ to the Redirect URIs
 
 ```
-git clone https://github.com/liu-william/TopSongsify
-pip3 install -r requirements.txt
+git clone https://github.com/liu-william/TopSongify
 cd TopSongify
+pip3 install -r requirements.txt
 python3 main.py
 ```
 

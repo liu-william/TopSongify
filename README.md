@@ -1,4 +1,4 @@
-# <h1 style="text-align: center;">TopSongify</h1>
+<h1 align="center">TopSongify</h1>
 A simple Spotify playlist generator script based on user's listening activities.
 
 ## Inspiration

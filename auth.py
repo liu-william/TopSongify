@@ -6,26 +6,32 @@ import sys
 import random
 import pkce
 
-REDIRECT_URI = "http://localhost/topsongify/callback/" # NEED TO CHANGE THIS
+REDIRECT_URI = "http://localhost/topsongify/callback/"
+TOKEN_QUERY = "https://accounts.spotify.com/api/token"
 CHARACTERS = string.ascii_letters + string.digits
-QUERY = "https://accounts.spotify.com/api/token"
 
 def retrieve_info() -> str: 
     """
         Retrieve user info.
+
         Returns:
             client_creds_b64 (str): Client Credentials in byte 64 format.
-            auth_url (str): Authentication URL
+            state (str): State for prevention.
+            client_id (str): App Client ID.
+            code_verifier (str): Code Verifier for PKCE ext.
     """
-    ######## REPLACE THESE 2 WITH OWN INFO... ########
+    
+    ######## REPLACE THESE 2 WITH OWN INFO... DO NOT COMMIT ########
     client_id = input("Enter Client ID: ").strip()
     client_secret = input("Enter Client Secret: ").strip()
-    ##################################################
+    ################################################################
 
     scope = "user-top-read playlist-modify-public playlist-modify-private"
     client_creds_b64 = f"{client_id}:{client_secret}"
     client_creds_b64 = base64.b64encode(client_creds_b64.encode()).decode()
-    state = "".join(random.choice(CHARACTERS) for i in range(16))
+    state = "".join(random.choice(CHARACTERS) for i in range(16))    # Used to prevent forgery attacks.
+
+    # PKCE (proof key for code exchange) for token verification.
     code_verifier = pkce.generate_code_verifier(length=random.choice([i for i in range(43, 129)]))
     code_challenge = pkce.get_code_challenge(code_verifier)
 
@@ -34,7 +40,7 @@ def retrieve_info() -> str:
     auth_url += "&response_type=code"
     auth_url += "&redirect_uri=" + urllib.parse.quote(REDIRECT_URI)    
     auth_url += "&scope=" + urllib.parse.quote(scope)
-    auth_url += "&state=" + urllib.parse.quote(state)
+    auth_url += "&state=" + urllib.parse.quote(state)    
     auth_url += "&show_dialog=true"    # To approve app each time
     auth_url += "&code_challenge_method=S256"
     auth_url += "&code_challenge=" + urllib.parse.quote(code_challenge)
@@ -49,6 +55,9 @@ def authenticate_user(client_creds_b64: str, state: str, client_id: str, code_ve
 
         Args:
             client_creds_b64 (str): Client Credentials in byte 64 format.
+            state (str): State for prevention.
+            client_id (str): App Client ID.
+            code_verifier (str): Code Verifier for PKCE ext.
 
         Returns:
             (str): User's session access token.
@@ -57,8 +66,13 @@ def authenticate_user(client_creds_b64: str, state: str, client_id: str, code_ve
     redirected_url = input("Please paste the full redirected URL: ")
 
     # Extract access code
-
     code = redirected_url[len(REDIRECT_URI + "?code="):-len("&state=" + state)]
+    returned_state = redirected_url[len(REDIRECT_URI + "?code=" + code + "&state=")]
+
+    # Check for forgery attacks. 
+    if returned_state != state:
+        print("Returned state does match with state, Abort!")
+        sys.exit()
 
     # Request Access token
     request_data = {
@@ -74,13 +88,11 @@ def authenticate_user(client_creds_b64: str, state: str, client_id: str, code_ve
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    response = requests.post(
-        url=QUERY, 
+    response_json = requests.post(
+        url=TOKEN_QUERY, 
         data=request_data, 
         headers=request_header
-    )
-
-    response_json = response.json()
+    ).json()
     
     # Retrieve access token
     try:
@@ -93,13 +105,16 @@ def authenticate_user(client_creds_b64: str, state: str, client_id: str, code_ve
 def get_access_token():
     """
         Gives users 2 tries to get access token.
+
         Returns:
             access_token (str): User's session access token.
     """
+
     client_creds_b64, state, client_id, code_verifier = retrieve_info()
     access_token = None
     tries = 0
-    # Re-authenticate    
+
+    # Authenticate (up to 2 tries)   
     while not access_token and tries < 2:
         access_token = authenticate_user(client_creds_b64, state, client_id, code_verifier)
         tries += 1

@@ -45,9 +45,10 @@ class CreatePlaylist:
             "Authorization": "Bearer {}".format(self.access_token)
         }
 
-        response = requests.get(query, headers=request_headers)
-
-        response_json = response.json()
+        response_json = requests.get(
+            query, 
+            headers=request_headers
+        ).json()
 
         return response_json["id"]
 
@@ -88,14 +89,13 @@ class CreatePlaylist:
             "offset": "0"
         }
 
-        response = requests.get(
+        response_json = requests.get(
             query, 
             params=request_params, 
             headers=request_headers
-            )
+        ).json()
         
-        response_json = response.json()
-        
+        # Add tracks uri.
         for item in response_json["items"]:
             self.tracks += (item["uri"] + ",")
    
@@ -107,6 +107,7 @@ class CreatePlaylist:
 
             Args: 
                 user_id (str): Spotify user ID.
+                
             Returns: 
                 (str): New playlist ID.
         """
@@ -115,7 +116,7 @@ class CreatePlaylist:
 
         request_data = {
             "name": "On Repeat {}".format(" ".join(self.time_range[self.time].split("_")).title()),
-            "description": "{} Songs that you love {}".format(self.limit, " ".join(self.time_range[self.time].split("_")).title()), 
+            "description": "{} Songs that you love {}".format(self.limit, "".join(self.time_range[self.time].split("_")).title()), 
             "public": False
         }
 
@@ -124,14 +125,12 @@ class CreatePlaylist:
             "Authorization": "Bearer {}".format(self.access_token)
         }
 
-        response = requests.post(
+        response_json = requests.post(
             query, 
             headers=request_headers, 
             json=request_data
-        )
+        ).json()
         
-        response_json = response.json()
-
         return response_json["id"]    # Created playlist ID
 
     def add_to_playlist(self, playlist_id: str):
@@ -150,12 +149,10 @@ class CreatePlaylist:
             "Authorization": "Bearer {}".format(self.access_token)
         }
 
-        response = requests.post(
+        response_json = requests.post(
             query,
             headers=request_headers
-        )
-
-        response_json = response.json()
+        ).json()
 
         try: 
             response_json["snapshot_id"]

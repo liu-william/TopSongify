@@ -67,7 +67,7 @@ def authenticate_user(client_creds_b64: str, state: str, client_id: str, code_ve
 
     # Extract access code
     code = redirected_url[len(REDIRECT_URI + "?code="):-len("&state=" + state)]
-    returned_state = redirected_url[len(REDIRECT_URI + "?code=" + code + "&state=")]
+    returned_state = redirected_url[len(REDIRECT_URI + "?code=" + code + "&state="):]
 
     # Check for forgery attacks. 
     if returned_state != state:
